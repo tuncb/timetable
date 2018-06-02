@@ -16,7 +16,6 @@ TEST_CASE("iterator tests", "iterator")
   const auto NR_STEPS_1 = 5;
   const auto NR_STEPS_2 = 5;
 
-
   tl::TimeLine<double> timeline {START_TIME, { { 1.0, NR_STEPS_1 }, { 2.0, NR_STEPS_2 } }};
 
   auto b = cbegin(timeline);
@@ -30,11 +29,12 @@ TEST_CASE("iterator tests", "iterator")
   }
   REQUIRE(counter == NR_STEPS_1 + NR_STEPS_2 + 1);
 
-
   counter = 0;
   for (auto iter = crbegin(timeline); iter != crend(timeline); ++iter)
   {
     counter++;
   }
   REQUIRE(counter == NR_STEPS_1 + NR_STEPS_2 + 1);
+
+  auto iter = at(timeline, 0.5);
 }

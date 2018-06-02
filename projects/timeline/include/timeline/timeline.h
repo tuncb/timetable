@@ -33,6 +33,20 @@ namespace tl {
       : timeline(a_timeline), subline_iter(a_subline_iter), position(a_position)
     {}
 
+    TimeLineIterator(const TimeLine<T> &a_timeline, T time) : TimeLineIterator(a_timeline, begin(a_timeline.sublines), 0)
+    {
+      auto current_start_time = a_timeline.start;
+      subline_iter = std::find_if(begin(a_timeline.sublines), end(a_timeline.sublines), [time, &current_start_time](const TimeSubline<T> &subline) {
+        auto current_end_time = current_start_time + subline.time_step * subline.nr_steps;
+        auto is_in_subline = (current_start_time <= time) && (time <= current_end_time);
+        current_start_time = current_end_time;
+        return is_in_subline;
+      });
+
+      if (subline_iter == end(a_timeline.sublines)) return;
+      position = static_cast<index_type>((time - current_start_time) / subline_iter->time_step);
+    }
+
     inline bool operator==(const TimeLineIterator<T> &other) const
     {
       return
@@ -53,11 +67,30 @@ namespace tl {
       return *this;
     }
 
+    TimeLineIterator<T>& operator++(int)
+    {
+      auto res = *this;
+      ++(this*)
+      return res;
+    }
+
     TimeLineIterator<T>& operator--()
     {
       --position;
       recalculateSublinePosition();
       return *this;
+    }
+
+    TimeLineIterator<T>& operator--(int)
+    {
+      auto res = *this;
+      --(this*)
+      return res;
+    }
+
+    inline TimeLineIterator<T>& operator+(const index_t &value)
+    {
+      
     }
 
   private:
@@ -95,7 +128,6 @@ namespace tl {
 
   template <typename T> bool operator !=(const TimeLineIterator<T> &lhs, const TimeLineIterator<T> &rhs) {return !(lhs == rhs); }
 
-
   template <typename T> TimeLineIterator<T> cbegin(const TimeLine<T> &timeline)
   {
     return { timeline, cbegin(timeline.sublines), 0 };
@@ -118,73 +150,16 @@ namespace tl {
     return std::reverse_iterator(cbegin(timeline));
   }
 
-
-
-/*
-  template <typename T> class TimeLine<T>::Iterator : public std::iterator<std::random_access_iterator_tag, T>
+  template <typename T> TimeLineIterator<T> at(const TimeLine<T> &timeline, T time)
   {
-  public:
-    using SublineIterator = std::vector<TimeSubLine<T>>::iterator;
+    return { timeline, time };
+  }
 
-    Iterator(const TimeLine<T> &a_timetable, SublineIterator a_timeline_iter, index_type a_position)
-      : timetable(a_timetable), timeline_iter(a_timeline_iter), position(a_position)
-    {}
+  template <typename T> std::reverse_iterator<TimeLineIterator<T>> rat(const TimeLine<T> &timeline, T time)
+  {
+    return std::reverse_iterator(TimeLineIterator<T>{ timeline, time });
+  }
 
-    Iterator(const TimeLine<T> &a_timetable, T time) : Iterator(a_timetable, begin(a_timetable.sublines), 0)
-    {
-      auto current_start_time = a_timetable.start;
-      timeline_iter = std::find_if(begin(a_timetable.sublines), end(a_timetable.sublines), [time](const TimeSubLine<T> &subline) {
-        auto current_end_time = current_start_time + subline.time_step * subline.nr_steps;
-        auto is_in_subline = (current_start_time <= time) && (time <= current_end_time);
-        current_start_time = current_end_time;
-        return is_in_subline;
-      });
-
-      if (timeline_iter == end(a_timetable.sublines)) return;
-      position = (time - current_start_time) / *timeline_iter.time_step;
-    }
-
-    T& operator*() const 
-    {
-      return computeSublineStartTime() + position * (*timeline_iter).time_step;
-    }
-
-    Iterator& operator++() 
-    {
-      ++position; 
-      recalculateSublinePosition();
-      return *this; 
-    }
-
-    Iterator& operator--() 
-    { 
-      --position; 
-      recalculateSublinePosition();
-      return *this; 
-    }
-
-  private:
-    std::reference_wrapper<const TimeLine<T>> timeline;
-    SublineIterator subline_iter;
-    index_type position;
-
-    const TimeLine<T>& timeline() {return time}
-
-    T computeSublineStartTime(SubLineIterator iter) const
-    {
-      return timetable.start_time + std::accumulate(begin(timetable.get().sublines), end(timetable.get().sublines), T(0), [](const T value, const TimeSubLine<T> &subline) {
-        return value + subline.nr_steps * subline.time_step;
-      });
-    }
-
-    void recalculateSublinePosition()
-    {
-      if (position > *subline_iter.nr_steps) ++subline_iter;
-      if (position < 0) --subline_iter;
-    }
-  };
-
-  */
 
 }
 
