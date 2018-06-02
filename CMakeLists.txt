@@ -1,8 +1,8 @@
 # define minimum cmake version
-cmake_minimum_required(VERSION 2.6.2)
+cmake_minimum_required(VERSION 3.1.2)
 
-PROJECT(timetable)
+PROJECT(timeline)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
  
-add_subdirectory(./Projects/timetable_tester)
+add_subdirectory(./projects/tester)
