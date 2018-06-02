@@ -18,10 +18,16 @@ namespace tl {
     std::vector<TimeSubline<T>> sublines;
   };
 
-  template <typename T> class TimeLineIterator : public std::iterator<std::random_access_iterator_tag, T>
+  template <typename T> class TimeLineIterator
   {
   public:
     using SublineIterator = typename std::vector<TimeSubline<T>>::const_iterator;
+
+    using iterator_category = std::random_access_iterator_tag;
+    using value_type = T;
+    using difference_type = std::ptrdiff_t;
+    using pointer = const T*;
+    using reference = const T&;
 
     TimeLineIterator(const TimeLine<T> &a_timeline, SublineIterator a_subline_iter, index_type a_position)
       : timeline(a_timeline), subline_iter(a_subline_iter), position(a_position)
@@ -107,7 +113,7 @@ namespace tl {
     return std::reverse_iterator(TimeLineIterator<T>{timeline, iter, iter->nr_steps});
   }
 
-  template <typename T> std::reverse_iterator<TimeLineIterator<T>>  crend(const TimeLine<T> &timeline)
+  template <typename T> std::reverse_iterator<TimeLineIterator<T>> crend(const TimeLine<T> &timeline)
   {
     return std::reverse_iterator(cbegin(timeline));
   }
