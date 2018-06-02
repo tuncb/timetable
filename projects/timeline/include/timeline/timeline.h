@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include <algorithm>
+#include <numeric>
 
 namespace tl {
 
@@ -17,6 +17,57 @@ namespace tl {
     T start;
     std::vector<TimeSubline<T>> sublines;
   };
+
+  template <typename T> class TimeLineIterator : public std::iterator<std::random_access_iterator_tag, T>
+  {
+  public:
+    using SublineIterator = typename std::vector<TimeSubline<T>>::const_iterator;
+
+    TimeLineIterator(const TimeLine<T> &a_timeline, SublineIterator a_subline_iter, index_type a_position)
+      : timeline(a_timeline), subline_iter(a_subline_iter), position(a_position)
+    {}
+
+    inline bool operator==(const TimeLineIterator<T> &other) const
+    {
+      return
+        (&timeline.get() == &other.timeline.get()) &&
+        (subline_iter == other.subline_iter) &&
+        (position == other.position);
+    }
+
+    inline T operator*() const
+    {
+      return computeSublineStartTime() + subline_iter->time_step * position;
+    }
+  private:
+    std::reference_wrapper<const TimeLine<T>> timeline;
+    SublineIterator subline_iter;
+    index_type position;
+
+    const TimeLine<T>& get_timeline() const { return timeline.get(); }
+
+    T computeSublineStartTime() const
+    {
+      return get_timeline().start + std::accumulate(cbegin(get_timeline().sublines), subline_iter, T(0), [](const T value, const TimeSubline<T> &subline) {
+        return value + subline.nr_steps * subline.time_step;
+      });
+    }
+  };
+
+  template <typename T> bool operator !=(const TimeLineIterator<T> &lhs, const TimeLineIterator<T> &rhs) {return !(lhs == rhs); }
+
+  template <typename T> TimeLineIterator<T> cbegin(const TimeLine<T> &timeline)
+  {
+    return TimeLineIterator<T>(timeline, cbegin(timeline.sublines), 0);
+  }
+
+  template <typename T> TimeLineIterator<T> cend(const TimeLine<T> &timeline)
+  {
+    return TimeLineIterator<T>(timeline, cend(timeline.sublines), 0);
+  }
+
+
+
 /*
   template <typename T> class TimeLine<T>::Iterator : public std::iterator<std::random_access_iterator_tag, T>
   {
