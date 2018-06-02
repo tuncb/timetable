@@ -2,11 +2,11 @@
 #include <vector>
 #include <algorithm>
 
-namespace timetable {
+namespace tl {
 
   using index_type  = ptrdiff_t;
 
-  template <typename T> struct TimeSubLine
+  template <typename T> struct TimeSubline
   {
     T time_step;
     index_type nr_steps;
@@ -15,9 +15,9 @@ namespace timetable {
   template <typename T> struct TimeLine
   {
     T start;
-    std::vector<TimeSubLine<T>> sublines;
+    std::vector<TimeSubline<T>> sublines;
   };
-
+/*
   template <typename T> class TimeLine<T>::Iterator : public std::iterator<std::random_access_iterator_tag, T>
   {
   public:
@@ -81,6 +81,7 @@ namespace timetable {
     }
   };
 
+  */
 
 }
 
