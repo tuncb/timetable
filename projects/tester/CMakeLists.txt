@@ -14,3 +14,9 @@ target_link_libraries(timeline_tester CONAN_PKG::catch2)
 
 source_group("timeline_library" FILES ${TIMELINE_LIB})
 
+set_target_properties(timeline_tester PROPERTIES
+    CXX_STANDARD 17
+    CXX_STANDARD_REQUIRED YES
+    CXX_EXTENSIONS NO
+)
+

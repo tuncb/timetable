@@ -39,6 +39,21 @@ namespace tl {
     {
       return computeSublineStartTime() + subline_iter->time_step * position;
     }
+
+    TimeLineIterator<T>& operator++()
+    {
+      ++position;
+      recalculateSublinePosition();
+      return *this;
+    }
+
+    TimeLineIterator<T>& operator--()
+    {
+      --position;
+      recalculateSublinePosition();
+      return *this;
+    }
+
   private:
     std::reference_wrapper<const TimeLine<T>> timeline;
     SublineIterator subline_iter;
@@ -52,9 +67,28 @@ namespace tl {
         return value + subline.nr_steps * subline.time_step;
       });
     }
+
+    void switchToNextSubline()
+    {
+      ++subline_iter;
+      position = 1;
+    }
+
+    void switchToPreviousSubline()
+    {
+      --subline_iter;
+      position = subline_iter->nr_steps;
+    }
+
+    void recalculateSublinePosition()
+    {
+      if (position > subline_iter->nr_steps) switchToNextSubline();
+      if (position < 0) switchToPreviousSubline();
+    }
   };
 
   template <typename T> bool operator !=(const TimeLineIterator<T> &lhs, const TimeLineIterator<T> &rhs) {return !(lhs == rhs); }
+
 
   template <typename T> TimeLineIterator<T> cbegin(const TimeLine<T> &timeline)
   {
@@ -63,7 +97,19 @@ namespace tl {
 
   template <typename T> TimeLineIterator<T> cend(const TimeLine<T> &timeline)
   {
-    return TimeLineIterator<T>(timeline, cend(timeline.sublines), 0);
+    return TimeLineIterator<T>(timeline, cend(timeline.sublines), 1);
+  }
+
+  template <typename T> std::reverse_iterator<TimeLineIterator<T>> crbegin(const TimeLine<T> &timeline)
+  {
+    auto iter = (rbegin(timeline.sublines) + 1).base();
+    if (timeline.sublines.empty()) return std::reverse_iterator(TimeLineIterator<T>(timeline, iter, 0));
+    return std::reverse_iterator(TimeLineIterator<T>(timeline, iter, iter->nr_steps));
+  }
+
+  template <typename T> std::reverse_iterator<TimeLineIterator<T>>  crend(const TimeLine<T> &timeline)
+  {
+    return std::reverse_iterator(cbegin(timeline));
   }
 
 
