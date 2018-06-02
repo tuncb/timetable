@@ -92,19 +92,19 @@ namespace tl {
 
   template <typename T> TimeLineIterator<T> cbegin(const TimeLine<T> &timeline)
   {
-    return TimeLineIterator<T>(timeline, cbegin(timeline.sublines), 0);
+    return { timeline, cbegin(timeline.sublines), 0 };
   }
 
   template <typename T> TimeLineIterator<T> cend(const TimeLine<T> &timeline)
   {
-    return TimeLineIterator<T>(timeline, cend(timeline.sublines), 1);
+    return { timeline, cend(timeline.sublines), 1 };
   }
 
   template <typename T> std::reverse_iterator<TimeLineIterator<T>> crbegin(const TimeLine<T> &timeline)
   {
     auto iter = (rbegin(timeline.sublines) + 1).base();
-    if (timeline.sublines.empty()) return std::reverse_iterator(TimeLineIterator<T>(timeline, iter, 0));
-    return std::reverse_iterator(TimeLineIterator<T>(timeline, iter, iter->nr_steps));
+    if (timeline.sublines.empty()) return std::reverse_iterator(TimeLineIterator<T>{timeline, iter, 0});
+    return std::reverse_iterator(TimeLineIterator<T>{timeline, iter, iter->nr_steps});
   }
 
   template <typename T> std::reverse_iterator<TimeLineIterator<T>>  crend(const TimeLine<T> &timeline)
