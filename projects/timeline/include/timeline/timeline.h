@@ -4,12 +4,10 @@
 
 namespace tl {
 
-  using index_type  = ptrdiff_t;
-
   template <typename T> struct TimeSubline
   {
     T time_step;
-    index_type nr_steps;
+    ptrdiff_t nr_steps;
   };
 
   template <typename T> struct TimeLine
@@ -29,7 +27,7 @@ namespace tl {
     using pointer = const T*;
     using reference = const T&;
 
-    TimeLineIterator(const TimeLine<T> &a_timeline, SublineIterator a_subline_iter, index_type a_position)
+    TimeLineIterator(const TimeLine<T> &a_timeline, SublineIterator a_subline_iter, ptrdiff_t a_position)
       : timeline(a_timeline), subline_iter(a_subline_iter), position(a_position)
     {}
 
@@ -47,7 +45,7 @@ namespace tl {
 
       if (subline_iter == end(a_timeline.sublines)) return;
 
-      position = static_cast<index_type>((time - current_start_time) / subline_iter->time_step);
+      position = static_cast<ptrdiff_t>((time - current_start_time) / subline_iter->time_step);
     }
 
     inline bool operator==(const TimeLineIterator<T> &other) const
@@ -70,13 +68,6 @@ namespace tl {
       return *this;
     }
 
-    inline TimeLineIterator<T> operator++(int)
-    {
-      auto res = *this;
-      ++(this*)
-      return res;
-    }
-
     inline TimeLineIterator<T>& operator--()
     {
       --position;
@@ -84,14 +75,7 @@ namespace tl {
       return *this;
     }
 
-    inline TimeLineIterator<T> operator--(int)
-    {
-      auto res = *this;
-      --(this*)
-      return res;
-    }
-
-    inline TimeLineIterator<T>& operator+=(index_type value)
+    inline TimeLineIterator<T>& operator+=(ptrdiff_t value)
     {
       while (value != 0) {
         value = this->addToCurrentTimeLine(value);
@@ -109,7 +93,7 @@ namespace tl {
   private:
     std::reference_wrapper<const TimeLine<T>> timeline;
     SublineIterator subline_iter;
-    index_type position;
+    ptrdiff_t position;
 
     const TimeLine<T>& get_timeline() const { return timeline.get(); }
 
@@ -132,7 +116,7 @@ namespace tl {
       position = subline_iter->nr_steps;
     }
 
-    index_type addToCurrentTimeLine(index_type value)
+    ptrdiff_t addToCurrentTimeLine(ptrdiff_t value)
     {
       auto next_pos = position + value;
       if (next_pos > subline_iter->nr_steps) {
@@ -156,18 +140,20 @@ namespace tl {
     }
   };
 
+  // Operators
+
   template <typename T> bool operator!=(const TimeLineIterator<T> &lhs, const TimeLineIterator<T> &rhs) {return !(lhs == rhs); }
-  template <typename T> TimeLineIterator<T> operator+(TimeLineIterator<T> lhs, index_type value)
+  template <typename T> TimeLineIterator<T> operator+(TimeLineIterator<T> lhs, ptrdiff_t value)
   {
     lhs += value;
     return lhs;
   }
-  template <typename T> TimeLineIterator<T> operator-(TimeLineIterator<T> lhs, const index_type value) 
+  template <typename T> TimeLineIterator<T> operator-(TimeLineIterator<T> lhs, const ptrdiff_t value)
   { 
     lhs += (-value);
     return lhs;
   }
-  template <typename T> TimeLineIterator<T>& operator-=(TimeLineIterator<T>& lhs, index_type value) 
+  template <typename T> TimeLineIterator<T>& operator-=(TimeLineIterator<T>& lhs, ptrdiff_t value)
   {
     lhs += (-value);
     return lhs;
@@ -176,6 +162,22 @@ namespace tl {
   template <typename T> bool operator>(const TimeLineIterator<T>& lhs, const TimeLineIterator<T>& rhs) { return rhs < lhs; }
   template <typename T> bool operator<=(const TimeLineIterator<T>& lhs, const TimeLineIterator<T>& rhs) { return !(lhs > rhs); }
   template <typename T> bool operator>=(const TimeLineIterator<T>& lhs, const TimeLineIterator<T>& rhs) { return !(lhs < rhs); }
+
+  template <typename T> TimeLineIterator<T> operator++(TimeLineIterator<T>& lhs, int)
+  {
+    auto res = lhs;
+    ++(lhs)
+    return res;
+  }
+
+  template <typename T> TimeLineIterator<T> operator--(TimeLineIterator<T>& lhs, int)
+  {
+    auto res = lhs;
+    --(lhs)
+    return res;
+  }
+
+  // iterator factories
 
   template <typename T> TimeLineIterator<T> cbegin(const TimeLine<T> &timeline)
   {
@@ -208,7 +210,5 @@ namespace tl {
   {
     return std::reverse_iterator(TimeLineIterator<T>{ timeline, time });
   }
-
-
 }
 
