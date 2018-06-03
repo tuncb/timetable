@@ -35,6 +35,8 @@ namespace tl {
 
     TimeLineIterator(const TimeLine<T> &a_timeline, T time) : TimeLineIterator(a_timeline, begin(a_timeline.sublines), 0)
     {
+      if (time < get_timeline().start) return;
+
       auto current_start_time = a_timeline.start;
       subline_iter = std::find_if(begin(a_timeline.sublines), end(a_timeline.sublines), [time, &current_start_time](const TimeSubline<T> &subline) {
         auto current_end_time = current_start_time + subline.time_step * subline.nr_steps;
@@ -44,6 +46,7 @@ namespace tl {
       });
 
       if (subline_iter == end(a_timeline.sublines)) return;
+
       position = static_cast<index_type>((time - current_start_time) / subline_iter->time_step);
     }
 
@@ -60,37 +63,47 @@ namespace tl {
       return computeSublineStartTime() + subline_iter->time_step * position;
     }
 
-    TimeLineIterator<T>& operator++()
+    inline TimeLineIterator<T>& operator++()
     {
       ++position;
       recalculateSublinePosition();
       return *this;
     }
 
-    TimeLineIterator<T>& operator++(int)
+    inline TimeLineIterator<T> operator++(int)
     {
       auto res = *this;
       ++(this*)
       return res;
     }
 
-    TimeLineIterator<T>& operator--()
+    inline TimeLineIterator<T>& operator--()
     {
       --position;
       recalculateSublinePosition();
       return *this;
     }
 
-    TimeLineIterator<T>& operator--(int)
+    inline TimeLineIterator<T> operator--(int)
     {
       auto res = *this;
       --(this*)
       return res;
     }
 
-    inline TimeLineIterator<T>& operator+(const index_t &value)
+    inline TimeLineIterator<T>& operator+=(index_type value)
     {
-      
+      while (value != 0) {
+        value = this->addToCurrentTimeLine(value);
+      }
+      return *this;
+    }
+
+    bool operator<(const TimeLineIterator<T>& rhs)
+    {
+      if (this->subline_iter < rhs.subline_iter) return true;
+      if (this->subline_iter == rhs.subline_iter) return this->position < rhs.position;
+      return false;
     }
 
   private:
@@ -119,6 +132,23 @@ namespace tl {
       position = subline_iter->nr_steps;
     }
 
+    index_type addToCurrentTimeLine(index_type value)
+    {
+      auto next_pos = position + value;
+      if (next_pos > subline_iter->nr_steps) {
+        switchToNextSubline();
+        return value - (subline_iter->nr_steps - position);
+      }
+
+      if (next_pos < 0) {
+        switchToPreviousSubline();
+        return value - position;
+      }
+
+      position = next_pos;
+      return 0;
+    }
+
     void recalculateSublinePosition()
     {
       if (position > subline_iter->nr_steps) switchToNextSubline();
@@ -126,7 +156,26 @@ namespace tl {
     }
   };
 
-  template <typename T> bool operator !=(const TimeLineIterator<T> &lhs, const TimeLineIterator<T> &rhs) {return !(lhs == rhs); }
+  template <typename T> bool operator!=(const TimeLineIterator<T> &lhs, const TimeLineIterator<T> &rhs) {return !(lhs == rhs); }
+  template <typename T> TimeLineIterator<T> operator+(TimeLineIterator<T> lhs, index_type value)
+  {
+    lhs += value;
+    return lhs;
+  }
+  template <typename T> TimeLineIterator<T> operator-(TimeLineIterator<T> lhs, const index_type value) 
+  { 
+    lhs += (-value);
+    return lhs;
+  }
+  template <typename T> TimeLineIterator<T>& operator-=(TimeLineIterator<T>& lhs, index_type value) 
+  {
+    lhs += (-value);
+    return lhs;
+  }
+
+  template <typename T> bool operator>(const TimeLineIterator<T>& lhs, const TimeLineIterator<T>& rhs) { return rhs < lhs; }
+  template <typename T> bool operator<=(const TimeLineIterator<T>& lhs, const TimeLineIterator<T>& rhs) { return !(lhs > rhs); }
+  template <typename T> bool operator>=(const TimeLineIterator<T>& lhs, const TimeLineIterator<T>& rhs) { return !(lhs < rhs); }
 
   template <typename T> TimeLineIterator<T> cbegin(const TimeLine<T> &timeline)
   {

@@ -37,4 +37,7 @@ TEST_CASE("iterator tests", "iterator")
   REQUIRE(counter == NR_STEPS_1 + NR_STEPS_2 + 1);
 
   auto iter = at(timeline, 0.5);
+  iter = iter + 3;
+  iter = iter - 3;
+  REQUIRE(iter == at(timeline, 0.5));
 }
