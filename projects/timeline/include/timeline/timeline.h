@@ -25,7 +25,7 @@ namespace tl {
     using value_type = T;
     using difference_type = std::ptrdiff_t;
     using pointer = const T*;
-    using reference = const T&;
+    using reference = const T;
 
     TimeLineIterator(const TimeLine<T> &a_timeline, SublineIterator a_subline_iter, ptrdiff_t a_position)
       : timeline(a_timeline), subline_iter(a_subline_iter), position(a_position)
@@ -106,12 +106,18 @@ namespace tl {
 
     void switchToNextSubline()
     {
+      if (subline_iter == end(get_timeline().sublines)) return;
       ++subline_iter;
       position = 1;
     }
 
     void switchToPreviousSubline()
     {
+      if (subline_iter == begin(get_timeline().sublines)) {
+        position = 0;
+        return;
+      }
+
       --subline_iter;
       position = subline_iter->nr_steps;
     }
@@ -136,7 +142,7 @@ namespace tl {
     void recalculateSublinePosition()
     {
       if (position > subline_iter->nr_steps) switchToNextSubline();
-      if (position < 0) switchToPreviousSubline();
+      if (position <= 0) switchToPreviousSubline();
     }
   };
 
@@ -193,7 +199,7 @@ namespace tl {
   {
     auto iter = (rbegin(timeline.sublines) + 1).base();
     if (timeline.sublines.empty()) return std::reverse_iterator(TimeLineIterator<T>{timeline, iter, 0});
-    return std::reverse_iterator(TimeLineIterator<T>{timeline, iter, iter->nr_steps});
+    return std::reverse_iterator(TimeLineIterator<T>{timeline, iter, iter->nr_steps + 1});
   }
 
   template <typename T> std::reverse_iterator<TimeLineIterator<T>> crend(const TimeLine<T> &timeline)
